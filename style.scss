@@ -1,0 +1,21 @@
+.row {
+  height: 12.5vh;
+  .piece {
+    border-radius: 50%;
+    height: 100%;
+  }
+  .white {
+    background-color: white;
+  }
+  .red {
+    background-color: red;
+  }
+}
+
+.bg-red {
+  background-color: red;
+}
+
+.activeCells {
+  background-color: lightblue;
+}
