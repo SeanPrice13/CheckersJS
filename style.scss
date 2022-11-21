@@ -1,8 +1,15 @@
+// .container {
+
+// }
+
 .row {
   height: 12.5vh;
   .piece {
     border-radius: 50%;
     height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   .white {
     background-color: white;
@@ -22,4 +29,11 @@
 
 .canBeEaten {
   background-color: gold;
+}
+
+.king::before {
+  content: "K";
+  color: grey;
+  font-size: xx-large;
+  font-weight: bolder;
 }

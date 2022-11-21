@@ -16,7 +16,17 @@ function init(turn) {
 function handleMove(target) {
   const cell = target.parentElement,
     position = cell.dataset.cell,
-    possibleMoves = [[turn == 'white' ? getPrevChar(target.parentElement.dataset.cell.slice(0,1)) : getNextChar(target.parentElement.dataset.cell.slice(0,1)), target.parentElement.dataset.cell.slice(1)-1].join(''), [turn == 'white' ? getPrevChar(target.parentElement.dataset.cell.slice(0,1)) : getNextChar(target.parentElement.dataset.cell.slice(0,1)), Number(target.parentElement.dataset.cell.slice(1))+1].join('')].filter(el => Number(el.slice(1)) < 9 && Number(el.slice(1)) > 0);
+    possibleMoves = target.classList.contains('king') 
+      ? [[getPrevChar(position.slice(0,1)), position.slice(1)-1].join(''), 
+        [getPrevChar(position.slice(0,1)), Number(position.slice(1))+1].join(''),
+        [getNextChar(position.slice(0,1)), position.slice(1)-1].join(''),
+        [getNextChar(position.slice(0,1)), Number(position.slice(1))+1].join('')].filter(el => Number(el.slice(1)) < 9 && Number(el.slice(1)) > 0)
+      : [[turn == 'white' 
+      ? getPrevChar(position.slice(0,1)) 
+      : getNextChar(position.slice(0,1)), position.slice(1)-1].join(''), [turn == 'white' 
+      ? getPrevChar(position.slice(0,1)) 
+      : getNextChar(position.slice(0,1)), Number(position.slice(1))+1].join('')].filter(el => Number(el.slice(1)) < 9 && Number(el.slice(1)) > 0);
+
   // Remove onclick attributes from un-clicked pieces
   for (const inactivePiece of [...document.querySelectorAll(`.${turn}`)].filter(el => el !== target)) {
     inactivePiece.removeAttribute('onclick');
@@ -48,8 +58,10 @@ function handleMove(target) {
         pCell.setAttribute("onclick", "movePieceToCell(this)");
       }
       // Check for valid cell/piece-jumping & apply class and function appropriately
-      else if (!pCell.firstElementChild.classList.contains(`${turn}`)) {
-        let pJumpCell = document.querySelector(`[data-cell~="${[turn == 'white' ? getPrevChar(move.slice(0,1)) : getNextChar(move.slice(0,1)), move.slice(1) < position.slice(1) ? move.slice(1)-1 : Number(move.slice(1)) + 1].join('')}"]`);
+      else if (!pCell?.firstElementChild.classList.contains(`${turn}`)) {
+        const pJumpCell = target.classList.contains("king") 
+          ? document.querySelector(`[data-cell~="${[position.slice(0, 1) > move.slice(0, 1) ? getPrevChar(move.slice(0, 1)) : getNextChar(move.slice(0, 1)), position.slice(1) < move.slice(1) ? Number(move.slice(1)) + 1 : move.slice(1) - 1].join('')}"]`) 
+          : document.querySelector(`[data-cell~="${[turn == "white" ? getPrevChar(move.slice(0, 1)) : getNextChar(move.slice(0, 1)), move.slice(1) < position.slice(1) ? move.slice(1) - 1: Number(move.slice(1)) + 1].join("")}"]`);
         if (pJumpCell?.innerHTML == "" || pJumpCell?.innerHTML == '\n          \n        ') {
           pJumpCell.classList.remove("bg-black");
           pJumpCell.classList.add("activeCells");
@@ -64,11 +76,21 @@ function handleMove(target) {
 
 function movePieceToCell(target) {
   const ogPosition = document.querySelector('.active').parentElement.dataset.cell, 
-    newPosition = target.dataset.cell;
+    newPosition = target.dataset.cell,
+    pEatCell = document.querySelector(`[data-cell~="${[ogPosition.slice(0, 1) > newPosition.slice(0, 1) ? getPrevChar(ogPosition.slice(0, 1)) : getNextChar(ogPosition.slice(0, 1)), ogPosition.slice(1) > newPosition.slice(1) ? ogPosition.slice(1)-1 : Number(ogPosition.slice(1)) + 1].join('')}"]`);
   // Move active piece to the clicked cell if empty, remove functions & revert cells to black
   if (target.innerHTML == "" || target.innerHTML == '\n          \n        ') {
     document.querySelector(".active").removeAttribute("click");
     target.appendChild(document.querySelector(".active"));
+    // King mechanic
+    const whiteKingArr = ["A1", "A3", "A5", "A7"],
+      redKingArr = ["H2", "H4", "H6", "H8"];
+      if (document.querySelector(".active").classList.contains(`${turn}`) && whiteKingArr.includes(newPosition)) {
+        target.firstElementChild.classList.add("king");
+      }
+      if (document.querySelector(".active").classList.contains(`${turn}`) && redKingArr.includes(newPosition)) {
+        target.firstElementChild.classList.add("king");
+      }
     document.querySelector(".active").classList.remove("active");
     for (const aCell of [...document.querySelectorAll(".activeCells")]) {
       aCell.removeAttribute("onclick");
@@ -77,8 +99,7 @@ function movePieceToCell(target) {
     }
     document.querySelector(".active")?.removeAttribute("onclick");
   }
-  // Simple eating mechanic
-  let pEatCell = document.querySelector(`[data-cell~="${[ogPosition.slice(0, 1) > newPosition.slice(0, 1) ? getPrevChar(ogPosition.slice(0, 1)) : getNextChar(ogPosition.slice(0, 1)), ogPosition.slice(1) > newPosition.slice(1) ? ogPosition.slice(1)-1 : Number(ogPosition.slice(1)) + 1].join('')}"]`);
+  // Eating mechanic
   if (pEatCell.classList.contains('canBeEaten')) {
     pEatCell.removeChild(pEatCell.firstElementChild);
   }
@@ -86,8 +107,6 @@ function movePieceToCell(target) {
     aCell.classList.add("bg-black");
     aCell.classList.remove("canBeEaten");
   }
-
-  // TODO: Add king mechanic
   init(turn == "white" ? (turn = "red") : (turn = "white"));
 }
 
